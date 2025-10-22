@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarjetas de Estudio: Concurrencia en Java</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Estilo para la tarjeta con perspectiva para el efecto de volteo */
+        .card-container {
+            perspective: 1000px;
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .card-container.is-flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden; /* Safari */
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .card-front {
+            background-color: white;
+            color: #111827;
+        }
+        .card-back {
+            background-color: #3B82F6; /* Azul */
+            color: white;
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div class="w-full max-w-md">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Concurrencia en Java</h1>
+
+        <!-- Contenedor de la Tarjeta -->
+        <div id="cardContainer" class="card-container w-full h-64 md:h-80 cursor-pointer mb-4">
+            <div id="cardInner" class="card-inner">
+                <!-- Cara Frontal -->
+                <div class="card-face card-front">
+                    <p id="cardFrontText" class="text-xl md:text-2xl font-semibold text-center"></p>
+                </div>
+                <!-- Cara Trasera -->
+                <div class="card-face card-back">
+                    <p id="cardBackText" class="text-lg md:text-xl text-center"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progreso -->
+        <div class="text-center text-gray-600 font-medium mb-6">
+            <p id="progressText"></p>
+        </div>
+
+        <!-- Controles de Navegación -->
+        <div class="flex justify-between">
+            <button id="prevButton" class="py-2 px-6 bg-gray-300 text-gray-700 font-semibold rounded-lg shadow hover:bg-gray-400 transition duration-200 disabled:opacity-50">
+                Anterior
+            </button>
+            <button id="nextButton" class="py-2 px-6 bg-blue-500 text-white font-semibold rounded-lg shadow hover:bg-blue-600 transition duration-200">
+                Siguiente
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Los datos de las tarjetas de estudio (extraídos del JSON)
+        // Nota: He adaptado la estructura del JSON que me diste.
+        const flashcardData = {
+            "aw": [
+                {"d5": {"text": "Hilo (Thread)"}, "back": {"text": "La unidad más básica de ejecución que permite a un programa realizar múltiples tareas simultáneamente."}},
+                {"d5": {"text": "Forma preferida para crear un Hilo"}, "back": {"text": "Implementando la interfaz `Runnable`, ya que promueve la composición sobre la herencia."}},
+                {"d5": {"text": "Método `Thread.start()`"}, "back": {"text": "Inicia el hilo, lo que hace que la JVM llame al método `run()` en un nuevo hilo de ejecución."}},
+                {"d5": {"text": "Método `Thread.join()`"}, "back": {"text": "Hace que el hilo actual espere hasta que el hilo sobre el que se llama termine su ejecución."}},
+                {"d5": {"text": "Método `Thread.interrupt()`"}, "back": {"text": "Solicita la interrupción de un hilo estableciendo una bandera de interrupción, no lo detiene abruptamente."}},
+                {"d5": {"text": "Monitor (en Java)"}, "back": {"text": "Un 'lock' o cerrojo asociado a cada objeto en Java, usado para lograr la exclusión mutua."}},
+                {"d5": {"text": "Palabra clave `synchronized`"}, "back": {"text": "Es la forma de adquirir el monitor de un objeto para proteger 'secciones críticas' del código."}},
+                {"d5": {"text": "Uso de `synchronized` en un método de instancia"}, "back": {"text": "Bloquea el monitor del objeto `this`, permitiendo que solo un hilo a la vez ejecute el método en esa instancia."}},
+                {"d5": {"text": "Uso de `synchronized` en un método estático"}, "back": {"text": "Bloquea el monitor del objeto `.class` de la clase, afectando a todas las instancias."}},
+                {"d5": {"text": "Método `Object.wait()`"}, "back": {"text": "Hace que el hilo actual libere el monitor y entre en estado de espera. Debe ser llamado desde un bloque synchronized."}},
+                {"d5": {"text": "Método `Object.notify()`"}, "back": {"text": "Despierta a un único hilo que esté esperando en el monitor del objeto."}},
+                {"d5": {"text": "Método `Object.notifyAll()`"}, "back": {"text": "Despierta a todos los hilos que estén esperando en el monitor. Generalmente es la opción más segura."}},
+                {"d5": {"text": "Semáforo (`Semaphore`)"}, "back": {"text": "Una utilidad que mantiene un conjunto de 'permisos' para limitar el número de hilos que acceden a un recurso."}},
+                {"d5": {"text": "Método `Semaphore.acquire()`"}, "back": {"text": "Adquiere un permiso del semáforo. Si no hay permisos disponibles, el hilo se bloquea."}},
+                {"d5": {"text": "Método `Semaphore.release()`"}, "back": {"text": "Libera un permiso, devolviéndolo al semáforo, lo que puede despertar a un hilo bloqueado."}},
+                {"d5": {"text": "Framework Executor"}, "back": {"text": "El enfoque moderno que desacopla la creación de tareas de su ejecución, gestionando un pool de hilos."}},
+                {"d5": {"text": "`ExecutorService`"}, "back": {"text": "La interfaz principal del Framework Executor que gestiona la ejecución de tareas asíncronas en un pool de hilos."}},
+                {"d5": {"text": "`Executors.newFixedThreadPool(int n)`"}, "back": {"text": "Crea un pool de hilos con un número fijo de hilos que se reutilizan."}},
+                {"d5": {"text": "`Executors.newCachedThreadPool()`"}, "back": {"text": "Crea un pool que genera hilos según sea necesario y reutiliza los disponibles."}},
+                {"d5": {"text": "Interfaz `Callable<V>`"}, "back": {"text": "Similar a `Runnable`, pero su método `call()` puede devolver un valor de tipo V y lanzar excepciones verificadas."}},
+                {"d5": {"text": "Objeto `Future<V>`"}, "back": {"text": "Representa el resultado de una computación asíncrona. Es un 'placeholder' para un valor que estará disponible más adelante."}},
+                {"d5": {"text": "Método `Future.get()`"}, "back": {"text": "Es un método bloqueante. Espera hasta que la tarea termine y devuelve su resultado."}},
+                {"d5": {"text": "Método `Future.isDone()`"}, "back": {"text": "Devuelve `true` si la tarea ha completado su ejecución (ya sea normalmente, por error o cancelación)."}},
+                {"d5": {"text": "Método `ExecutorService.submit()`"}, "back": {"text": "Envía una tarea (`Runnable` o `Callable`) para su ejecución y devuelve un objeto `Future` para rastrear el resultado."}},
+                {"d5": {"text": "Método `ExecutorService.execute()`"}, "back": {"text": "Ejecuta una tarea de tipo `Runnable`, pero no devuelve nada para rastrear su finalización o resultado."}}
+            ]
+        };
+
+        const flashcards = flashcardData.aw;
+        let currentIndex = 0;
+        
+        // Elementos del DOM
+        const cardContainer = document.getElementById('cardContainer');
+        const cardFrontText = document.getElementById('cardFrontText');
+        const cardBackText = document.getElementById('cardBackText');
+        const prevButton = document.getElementById('prevButton');
+        const nextButton = document.getElementById('nextButton');
+        const progressText = document.getElementById('progressText');
+
+        // Función para mostrar la tarjeta actual
+        function showCard() {
+            const card = flashcards[currentIndex];
+            
+            // Limpiar código markdown simple (`) para mejor visualización
+            cardFrontText.textContent = card.d5.text.replace(/`/g, '');
+            cardBackText.textContent = card.back.text.replace(/`/g, '');
+            
+            // Actualizar progreso
+            progressText.textContent = `Tarjeta ${currentIndex + 1} de ${flashcards.length}`;
+            
+            // Habilitar/deshabilitar botones
+            prevButton.disabled = currentIndex === 0;
+            nextButton.disabled = currentIndex === flashcards.length - 1;
+
+            // Asegurarse de que la tarjeta esté boca arriba
+            cardContainer.classList.remove('is-flipped');
+        }
+
+        // --- Event Listeners ---
+
+        // Voltear tarjeta al hacer clic
+        cardContainer.addEventListener('click', () => {
+            cardContainer.classList.toggle('is-flipped');
+        });
+
+        // Botón Siguiente
+        nextButton.addEventListener('click', () => {
+            if (currentIndex < flashcards.length - 1) {
+                currentIndex++;
+                showCard();
+            }
+        });
+
+        // Botón Anterior
+        prevButton.addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                showCard();
+            }
+        });
+
+        // Mostrar la primera tarjeta al cargar
+        showCard();
+
+    </script>
+</body>
+</html>
