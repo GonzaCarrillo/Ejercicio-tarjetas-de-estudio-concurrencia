@@ -1,0 +1,159 @@
+/* style.css */
+
+/* --- Reset y Base --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f3f4f6; /* Gray 100 */
+    color: #1f2937; /* Gray 800 */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+/* --- Contenedor Principal --- */
+.app-container {
+    width: 100%;
+    max-width: 28rem; /* max-w-md */
+}
+
+.main-title {
+    font-size: 1.875rem; /* 3xl */
+    font-weight: 700;
+    text-align: center;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+}
+
+/* --- ANIMACIÓN Y ESTRUCTURA DE LA TARJETA --- */
+.card-container {
+    width: 100%;
+    height: 16rem; /* h-64 */
+    margin-bottom: 1rem;
+    perspective: 1000px; /* Necesario para el efecto 3D */
+    cursor: pointer;
+}
+
+/* Ajuste de altura para pantallas medianas/grandes */
+@media (min-width: 768px) {
+    .card-container {
+        height: 20rem; /* h-80 */
+    }
+}
+
+.card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+}
+
+/* Clase que se añade con JS para rotar */
+.card-container.is-flipped .card-inner {
+    transform: rotateY(180deg);
+}
+
+.card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden; /* Safari */
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* Cara Frontal */
+.card-front {
+    background-color: white;
+    color: #111827;
+}
+
+.card-front-text {
+    font-size: 1.25rem; /* xl */
+    font-weight: 600;
+    text-align: center;
+}
+
+@media (min-width: 768px) {
+    .card-front-text {
+        font-size: 1.5rem; /* 2xl */
+    }
+}
+
+/* Cara Trasera */
+.card-back {
+    background-color: #3b82f6; /* Blue 500 */
+    color: white;
+    transform: rotateY(180deg);
+}
+
+.card-back-text {
+    font-size: 1.125rem; /* lg */
+    text-align: center;
+}
+
+@media (min-width: 768px) {
+    .card-back-text {
+        font-size: 1.25rem; /* xl */
+    }
+}
+
+/* --- Controles y Progreso --- */
+.progress-container {
+    text-align: center;
+    color: #4b5563; /* Gray 600 */
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+}
+
+.controls {
+    display: flex;
+    justify-content: space-between;
+}
+
+.btn {
+    padding: 0.5rem 1.5rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-prev {
+    background-color: #d1d5db; /* Gray 300 */
+    color: #374151; /* Gray 700 */
+}
+
+.btn-prev:hover:not(:disabled) {
+    background-color: #9ca3af; /* Gray 400 */
+}
+
+.btn-next {
+    background-color: #3b82f6; /* Blue 500 */
+    color: white;
+}
+
+.btn-next:hover:not(:disabled) {
+    background-color: #2563eb; /* Blue 600 */
+}
